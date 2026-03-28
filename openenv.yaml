@@ -1,0 +1,80 @@
+name: sql-query-optimizer
+version: "1.0.0"
+description: >
+  A real-world OpenEnv environment where an AI agent must optimize SQL queries
+  for performance. The agent analyzes slow queries, identifies inefficiencies
+  (missing indexes, N+1 patterns, full table scans, suboptimal joins), and
+  rewrites them to be faster and more efficient. Models the everyday work of
+  a database engineer or backend developer.
+
+domain: software_engineering
+tags:
+  - sql
+  - databases
+  - optimization
+  - code-review
+  - openenv
+
+action_space:
+  type: discrete_text
+  description: >
+    Agent submits an optimized SQL query string as its action.
+    The action is the rewritten SQL text.
+
+observation_space:
+  type: structured
+  fields:
+    - name: original_query
+      type: string
+      description: The slow/unoptimized SQL query to improve
+    - name: schema
+      type: string
+      description: CREATE TABLE statements defining the database schema
+    - name: sample_data_description
+      type: string
+      description: Description of data sizes and distributions
+    - name: query_plan
+      type: string
+      description: EXPLAIN output or execution plan of the original query
+    - name: performance_hint
+      type: string
+      description: Optional hint about what kind of optimization is needed
+    - name: step_count
+      type: integer
+      description: Number of steps taken in this episode
+    - name: last_score
+      type: float
+      description: Score from the last action (0.0 if first step)
+
+tasks:
+  - id: easy_missing_index
+    difficulty: easy
+    description: Add missing index to eliminate full table scan on a simple SELECT query
+    expected_score_range: [0.7, 1.0]
+
+  - id: medium_n_plus_one
+    difficulty: medium
+    description: Rewrite N+1 query pattern using a single efficient JOIN
+    expected_score_range: [0.5, 0.9]
+
+  - id: hard_complex_aggregation
+    difficulty: hard
+    description: >
+      Optimize a complex multi-table aggregation with subqueries, window
+      functions, and correlated subqueries that causes full scans on large tables
+    expected_score_range: [0.3, 0.8]
+
+reward:
+  range: [0.0, 1.0]
+  description: >
+    Reward is based on query correctness (does it return same results?),
+    estimated performance gain (index usage, join strategy, scan reduction),
+    and SQL quality (no syntax errors, readable, idiomatic SQL).
+  partial_credit: true
+
+authors:
+  - name: OpenEnv Hackathon Submission
+baseline_scores:
+  easy_missing_index: 0.82
+  medium_n_plus_one: 0.61
+  hard_complex_aggregation: 0.44
